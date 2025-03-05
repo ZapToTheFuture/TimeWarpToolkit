@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MidJourney Prompt Enhancer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+            position: relative;
+        }
+        h1 {
+            color: #00eaff;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 234, 255, 0.7);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0, 234, 255, 0.2);
+        }
+        label {
+            display: block;
+            margin: 12px 0 6px;
+            font-weight: 700;
+            color: #ff00ff;
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #00eaff;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            font-family: 'Orbitron', sans-serif;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        /* New styles for select elements */
+        select {
+            background: #252545; /* Darker purple-blue to match gradient */
+            color: #b0e0ff; /* Light cyan for better contrast */
+            appearance: none; /* Remove default arrow for consistency */
+            padding-right: 30px; /* Space for custom arrow if desired */
+        }
+        select option {
+            background: #252545; /* Consistent background for dropdown items */
+            color: #b0e0ff; /* Light cyan text for options */
+        }
+        select:focus, input:focus, textarea:focus {
+            border-color: #ff00ff;
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+        button {
+            background: linear-gradient(45deg, #00eaff, #ff00ff);
+            color: #1a1a2e;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 0 10px;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
+        }
+        #promptOutput {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid #00eaff;
+            color: #e0e0e0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        #copyButton {
+            display: block;
+            margin: 15px auto 0;
+            background: linear-gradient(45deg, #ff00ff, #00eaff);
+        }
+        #copyButton.copied {
+            background: linear-gradient(45deg, #00ff00, #00eaff);
+        }
+        .ref-container {
+            margin-left: 20px;
+            display: none;
+        }
+        .ref-container.active {
+            display: block;
+        }
+        .checkbox-label {
+            margin: 12px 0 0;
+            font-weight: 700;
+            color: #ff00ff;
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+        }
+        .toggle-container {
+            margin: 8px 0;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+    <h1>MidJourney Prompt Enhancer</h1>
+    
+    <form id="promptForm" onsubmit="generatePrompt(event)">
+        <!-- Section 1: Main Prompt -->
+        <div class="section">
+            <label for="description">Main Prompt:</label>
+            <textarea id="description" rows="3" placeholder="e.g., A majestic alpaca in a futuristic city..." required></textarea>
+        </div>
+
+        <!-- Section 2: Lighting & Color Scheme -->
+        <div class="section">
+            <label for="lighting">Lighting:</label>
+            <select id="lighting">
+                <option value="">None</option>
+                <option value="natural light">Natural Light</option>
+                <option value="golden hour">Golden Hour</option>
+                <option value="blue hour">Blue Hour</option>
+                <option value="twilight">Twilight</option>
+                <option value="moonlight">Moonlight</option>
+                <option value="harsh sunlight">Harsh Sunlight</option>
+                <option value="overcast lighting">Overcast Lighting</option>
+                <option value="soft lighting">Soft Lighting</option>
+                <option value="dramatic lighting">Dramatic Lighting</option>
+                <option value="cinematic lighting">Cinematic Lighting</option>
+                <option value="studio lighting">Studio Lighting</option>
+                <option value="neon glow">Neon Glow</option>
+                <option value="fluorescent lighting">Fluorescent Lighting</option>
+                <option value="tungsten lighting">Tungsten Lighting</option>
+                <option value="candlelight">Candlelight</option>
+                <option value="torchlight">Torchlight</option>
+                <option value="ambient lighting">Ambient Lighting</option>
+                <option value="diffused lighting">Diffused Lighting</option>
+                <option value="backlighting">Backlighting</option>
+                <option value="rim lighting">Rim Lighting</option>
+                <option value="bokeh lighting">Bokeh Lighting</option>
+                <option value="volumetric lighting">Volumetric Lighting</option>
+                <option value="god rays">God Rays</option>
+                <option value="misty lighting">Misty Lighting</option>
+                <option value="foggy lighting">Foggy Lighting</option>
+                <option value="shimmering light">Shimmering Light</option>
+                <option value="strobe lighting">Strobe Lighting</option>
+                <option value="silhouette lighting">Silhouette Lighting</option>
+                <option value="low-key lighting">Low-Key Lighting</option>
+                <option value="high-key lighting">High-Key Lighting</option>
+                <option value="moody lighting">Moody Lighting</option>
+                <option value="warm lighting">Warm Lighting</option>
+                <option value="cool lighting">Cool Lighting</option>
+                <option value="chiaroscuro lighting">Chiaroscuro Lighting</option>
+            </select>
+
+            <label for="colorScheme">Color Scheme:</label>
+            <select id="colorScheme">
+                <option value="">None</option>
+                <option value="vibrant colors">Vibrant Colors</option>
+                <option value="neon colors">Neon Colors</option>
+                <option value="bold primaries">Bold Primaries</option>
+                <option value="tropical hues">Tropical Hues</option>
+                <option value="pastel palette">Pastel Palette</option>
+                <option value="muted tones">Muted Tones</option>
+                <option value="soft gradients">Soft Gradients</option>
+                <option value="earthy tones">Earthy Tones</option>
+                <option value="autumn palette">Autumn Palette</option>
+                <option value="winter tones">Winter Tones</option>
+                <option value="monochromatic">Monochromatic</option>
+                <option value="high contrast">High Contrast</option>
+                <option value="desaturated palette">Desaturated Palette</option>
+                <option value="warm hues">Warm Hues</option>
+                <option value="cool tones">Cool Tones</option>
+                <option value="jewel tones">Jewel Tones</option>
+                <option value="metallic shades">Metallic Shades</option>
+                <option value="surreal colors">Surreal Colors</option>
+                <option value="cosmic palette">Cosmic Palette</option>
+            </select>
+        </div>
+
+        <!-- Section 3: Camera Settings -->
+        <div class="section">
+            <label for="cameraView">Camera View Direction:</label>
+            <select id="cameraView">
+                <option value="">None</option>
+                <option value="centered view">Centered View</option>
+                <option value="three-quarter profile">Three-Quarter Profile</option>
+                <option value="side profile">Side Profile</option>
+                <option value="back three-quarter profile">Back Three-Quarter Profile</option>
+                <option value="back view">Back View</option>
+            </select>
+
+            <label for="cameraAngle">Camera Angle:</label>
+            <select id="cameraAngle">
+                <option value="">None</option>
+                <option value="low angle">Low Angle</option>
+                <option value="high angle">High Angle</option>
+                <option value="overhead view">Overhead View</option>
+                <option value="bird's eye view">Bird's Eye View</option>
+            </select>
+
+            <label for="cameraShot">Camera Shot Type:</label>
+            <select id="cameraShot">
+                <option value="">None</option>
+                <option value="extreme close-up">Extreme Close-up</option>
+                <option value="close-up">Close-up</option>
+                <option value="medium close-up">Medium Close-up</option>
+                <option value="medium">Medium</option>
+                <option value="full body">Full Body</option>
+            </select>
+
+            <label for="depthOfField">Depth of Field (Aperture):</label>
+            <select id="depthOfField">
+                <option value="">None</option>
+                <option value="f/1.4">f/1.4</option>
+                <option value="f/2.8">f/2.8</option>
+                <option value="f/5.6">f/5.6</option>
+                <option value="f/8">f/8</option>
+                <option value="f/16">f/16</option>
+            </select>
+
+            <label for="cameraLens">Camera Lens:</label>
+            <select id="cameraLens">
+                <option value="">None</option>
+                <option value="wide angle">Wide Angle</option>
+                <option value="fisheye">Fisheye</option>
+                <option value="macro">Macro</option>
+                <option value="tilt-shift">Tilt-Shift</option>
+            </select>
+
+            <label for="cameraBrand">Camera Brand:</label>
+            <select id="cameraBrand">
+                <option value="">None</option>
+                <option value="shot with Canon">Canon</option>
+                <option value="shot with Nikon">Nikon</option>
+                <option value="shot with Sony">Sony</option>
+                <option value="shot with Fujifilm">Fujifilm</option>
+                <option value="shot with Leica">Leica</option>
+                <option value="shot with Polaroid">Polaroid</option>
+                <option value="shot with Hasselblad">Hasselblad</option>
+                <option value="shot with Kodak">Kodak</option>
+            </select>
+
+            <label for="additionalCamera">Additional Camera Angles & Shots:</label>
+            <select id="additionalCamera">
+                <option value="">None</option>
+                <option value="dutch angle">Dutch Angle</option>
+                <option value="point of view">Point of View</option>
+                <option value="selfie">Selfie</option>
+            </select>
+        </div>
+
+        <!-- Section 4: Technical Settings -->
+        <div class="section">
+            <label for="aspectRatio">Aspect Ratio:</label>
+            <select id="aspectRatio">
+                <option value="--ar 16:9">16:9 (Widescreen)</option>
+                <option value="--ar 4:3">4:3 (Standard)</option>
+                <option value="--ar 3:2">3:2 (Classic Photo)</option>
+                <option value="--ar 1:1">1:1 (Square)</option>
+                <option value="--ar 9:16">9:16 (Vertical)</option>
+            </select>
+
+            <label for="quality">Quality:</label>
+            <select id="quality">
+                <option value="--q 1">High Quality (1)</option>
+                <option value="--q 0.5">Medium Quality (0.5)</option>
+                <option value="--q 0.25">Low Quality (0.25)</option>
+            </select>
+
+            <label for="version">MidJourney Version:</label>
+            <select id="version">
+                <option value="--v 6">Version 6 (Latest)</option>
+                <option value="--v 5.2">Version 5.2</option>
+                <option value="--v 5">Version 5</option>
+            </select>
+        </div>
+
+        <!-- Section 5: Advanced Options -->
+        <div class="section">
+            <label for="rawStyle">Raw Style:</label>
+            <select id="rawStyle">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+            </select>
+
+            <label for="chaos">Chaos Level (0-100):</label>
+            <input type="number" id="chaos" min="0" max="100" value="0">
+
+            <label for="niji">Niji Model:</label>
+            <select id="niji">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+            </select>
+
+            <label for="tile">Tile:</label>
+            <select id="tile">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+            </select>
+
+            <label for="stop">Stop:</label>
+            <select id="stop">
+                <option value="">None</option>
+                <option value="10">10%</option>
+                <option value="25">25%</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+            </select>
+
+            <label for="weird">Weird (0-1000):</label>
+            <input type="number" id="weird" min="0" max="3000" value="0">
+
+            <div class="toggle-container">
+                <label for="noEnable">Exclude:</label>
+                <input type="checkbox" id="noEnable">
+                <div class="ref-container" id="noOptions">
+                    <label for="noText">Exclude:</label>
+                    <input type="text" id="noText" placeholder="e.g., trees, people">
+                </div>
+            </div>
+
+            <label class="checkbox-label">Style Reference</label>
+            <input type="checkbox" id="srefEnable">
+            <div class="ref-container" id="srefOptions">
+                <label for="srefUrl">Image URL:</label>
+                <input type="text" id="srefUrl" placeholder="Paste image URL here">
+                <label for="srefNumber">Style Number:</label>
+                <input type="number" id="srefNumber" placeholder="Enter --sref number here" min="0">
+                <label for="srefWeight">Style Weight (0-1000):</label>
+                <input type="range" id="srefWeight" min="0" max="1000" value="100">
+                <input type="number" id="srefWeightNum" min="0" max="1000" value="100" style="width: 60px;">
+            </div>
+
+            <label class="checkbox-label">Character Reference</label>
+            <input type="checkbox" id="crefEnable">
+            <div class="ref-container" id="crefOptions">
+                <label for="crefUrl">Image URL:</label>
+                <input type="text" id="crefUrl" placeholder="Paste image URL here">
+                <label for="crefWeight">Character Weight (0-100):</label>
+                <input type="range" id="crefWeight" min="0" max="100" value="100">
+                <input type="number" id="crefWeightNum" min="0" max="100" value="100" style="width: 60px;">
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button type="submit">Enhance Prompt</button>
+        </div>
+    </form>
+
+    <div id="promptOutput"></div>
+    <button id="copyButton">Copy to Clipboard</button>
+
+    <script>
+        // Toggle reference and no options visibility
+        const srefEnable = document.getElementById('srefEnable');
+        const srefOptions = document.getElementById('srefOptions');
+        const crefEnable = document.getElementById('crefEnable');
+        const crefOptions = document.getElementById('crefOptions');
+        const noEnable = document.getElementById('noEnable');
+        const noOptions = document.getElementById('noOptions');
+
+        srefEnable.addEventListener('change', function() {
+            srefOptions.classList.toggle('active', this.checked);
+        });
+        crefEnable.addEventListener('change', function() {
+            crefOptions.classList.toggle('active', this.checked);
+        });
+        noEnable.addEventListener('change', function() {
+            noOptions.classList.toggle('active', this.checked);
+        });
+
+        // Sync slider and number inputs
+        const srefWeight = document.getElementById('srefWeight');
+        const srefWeightNum = document.getElementById('srefWeightNum');
+        const crefWeight = document.getElementById('crefWeight');
+        const crefWeightNum = document.getElementById('crefWeightNum');
+
+        srefWeight.addEventListener('input', function() {
+            srefWeightNum.value = this.value;
+        });
+        srefWeightNum.addEventListener('input', function() {
+            srefWeight.value = this.value;
+        });
+        crefWeight.addEventListener('input', function() {
+            crefWeightNum.value = this.value;
+        });
+        crefWeightNum.addEventListener('input', function() {
+            crefWeight.value = this.value;
+        });
+
+        function generatePrompt(event) {
+            event.preventDefault();
+            
+            const description = document.getElementById('description').value.trim();
+            const rawStyle = document.getElementById('rawStyle').value;
+            const lighting = document.getElementById('lighting').value;
+            const colorScheme = document.getElementById('colorScheme').value;
+            const cameraView = document.getElementById('cameraView').value;
+            const cameraAngle = document.getElementById('cameraAngle').value;
+            const cameraShot = document.getElementById('cameraShot').value;
+            const depthOfField = document.getElementById('depthOfField').value;
+            const cameraLens = document.getElementById('cameraLens').value;
+            const cameraBrand = document.getElementById('cameraBrand').value;
+            const additionalCamera = document.getElementById('additionalCamera').value;
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            const quality = document.getElementById('quality').value;
+            const version = document.getElementById('version').value;
+            const chaos = document.getElementById('chaos').value;
+            const niji = document.getElementById('niji').value;
+            const tile = document.getElementById('tile').value;
+            const stop = document.getElementById('stop').value;
+            const weird = document.getElementById('weird').value;
+            const noEnable = document.getElementById('noEnable').checked;
+            const noText = document.getElementById('noText').value;
+            const srefEnable = document.getElementById('srefEnable').checked;
+            const srefUrl = document.getElementById('srefUrl').value;
+            const srefNumber = document.getElementById('srefNumber').value;
+            const srefWeight = document.getElementById('srefWeight').value;
+            const crefEnable = document.getElementById('crefEnable').checked;
+            const crefUrl = document.getElementById('crefUrl').value;
+            const crefWeight = document.getElementById('crefWeight').value;
+
+            // Start with description, ensuring it ends with a period and a space
+            let prompt = description.endsWith('.') ? description + " " : description + ". ";
+            let descriptiveParameters = [];
+            let dashedParameters = [];
+
+            // Descriptive Parameters (Sections 2 & 3): Comma-separated
+            if (lighting) descriptiveParameters.push(lighting);
+            if (colorScheme) descriptiveParameters.push(colorScheme);
+            if (cameraView) descriptiveParameters.push(cameraView);
+            if (cameraAngle) descriptiveParameters.push(cameraAngle);
+            if (cameraShot) descriptiveParameters.push(cameraShot);
+            if (depthOfField) descriptiveParameters.push(depthOfField);
+            if (cameraLens) descriptiveParameters.push(cameraLens);
+            if (cameraBrand) descriptiveParameters.push(cameraBrand);
+            if (additionalCamera) descriptiveParameters.push(additionalCamera);
+
+            // Dashed Parameters (Sections 4 & 5): Space-separated
+            if (aspectRatio) dashedParameters.push(aspectRatio.trim());
+            if (quality) dashedParameters.push(quality);
+            if (version) dashedParameters.push(version);
+            if (rawStyle === "on") dashedParameters.push("--style raw");
+            if (chaos > 0) dashedParameters.push("--chaos " + chaos);
+            if (niji === "on") dashedParameters.push("--niji 6");
+            if (tile === "on") dashedParameters.push("--tile");
+            if (stop) dashedParameters.push("--stop " + stop);
+            if (weird > 0) dashedParameters.push("--weird " + weird);
+            if (noEnable && noText) dashedParameters.push("--no " + noText);
+            if (srefEnable) {
+                if (srefUrl) dashedParameters.push("--sref " + srefUrl);
+                else if (srefNumber) dashedParameters.push("--sref " + srefNumber);
+                if (srefUrl || srefNumber) {
+                    if (srefWeight) dashedParameters.push("--sw " + srefWeight);
+                }
+            }
+            if (crefEnable) {
+                if (crefUrl) dashedParameters.push("--cref " + crefUrl);
+                if (crefWeight) dashedParameters.push("--cw " + crefWeight);
+            }
+
+            // Append descriptive parameters if any exist
+            if (descriptiveParameters.length > 0) {
+                prompt += descriptiveParameters.join(", ");
+            }
+
+            // Append dashed parameters if any exist
+            if (dashedParameters.length > 0) {
+                if (descriptiveParameters.length > 0) {
+                    prompt += " "; // Space between descriptive and dashed
+                }
+                prompt += dashedParameters.join(" ");
+            }
+
+            // Display the prompt
+            document.getElementById('promptOutput').innerText = prompt.trim();
+        }
+
+        // Copy to clipboard functionality
+        const copyButton = document.getElementById('copyButton');
+        copyButton.addEventListener('click', function() {
+            const promptText = document.getElementById('promptOutput').innerText;
+            navigator.clipboard.writeText(promptText).then(() => {
+                copyButton.textContent = 'Copied!';
+                copyButton.classList.add('copied');
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy to Clipboard';
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy to clipboard. Please try again.');
+            });
+        });
+
+        // Particle effect
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                vx: Math.random() * 0.5 - 0.25,
+                vy: Math.random() * 0.5 - 0.25
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0, 234, 255, 0.5)';
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
+                if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+    </script>
+</body>
+</html>
